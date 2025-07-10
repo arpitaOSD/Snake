@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Snake Game (HTML5 version)</title>
+  <style>
+    body {
+      background-color: #111;
+      color: white;
+      text-align: center;
+      font-family: Arial, sans-serif;
+    }
+    canvas {
+      border: 2px solid white;
+      display: block;
+      margin: 20px auto;
+      background-color: #000;
+    }
+  </style>
+</head>
+<body>
+  <h1>Snake Game</h1>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+  <p>Use <strong>W A S D</strong> or Arrow Keys to control. Press <strong>X</strong> to quit.</p>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const WIDTH = 40;
+    const HEIGHT = 20;
+    const SCALE = 20;
+
+    let x = Math.floor(WIDTH / 2);
+    let y = Math.floor(HEIGHT / 2);
+    let fruitX = Math.floor(Math.random() * (WIDTH - 2)) + 1;
+    let fruitY = Math.floor(Math.random() * (HEIGHT - 2)) + 1;
+    let score = 0;
+    let dir = ""; // STOP, LEFT, RIGHT, UP, DOWN
+    let gameOver = false;
+
+    let tail = [];
+    let tailLength = 0;
+
+    function drawBlock(x, y, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
+    }
+
+    function draw() {
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, WIDTH * SCALE, HEIGHT * SCALE);
+
+      // Draw fruit
+      drawBlock(fruitX, fruitY, "red");
+
+      // Draw tail
+      for (let i = 0; i < tail.length; i++) {
+        drawBlock(tail[i][0], tail[i][1], "limegreen");
+      }
+
+      // Draw head
+      drawBlock(x, y, "lime");
+
+      // Draw borders
+      ctx.strokeStyle = "white";
+      ctx.strokeRect(0, 0, WIDTH * SCALE, HEIGHT * SCALE);
+
+      // Draw score
+      ctx.fillStyle = "white";
+      ctx.font = "18px Arial";
+      ctx.fillText("Score: " + score, 10, HEIGHT * SCALE + 25);
+    }
+
+    function update() {
+      if (gameOver) return;
+
+      let prevX = x;
+      let prevY = y;
+
+      // Move head
+      switch (dir) {
+        case "LEFT": x--; break;
+        case "RIGHT": x++; break;
+        case "UP": y--; break;
+        case "DOWN": y++; break;
+      }
+
+      // Wall collision
+      if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) {
+        gameOver = true;
+        return;
+      }
+
+      // Tail collision
+      for (let segment of tail) {
+        if (segment[0] === x && segment[1] === y) {
+          gameOver = true;
+          return;
+        }
+      }
+
+      // Move tail
+      if (tailLength > 0) {
+        tail.unshift([prevX, prevY]);
+        if (tail.length > tailLength) tail.pop();
+      }
+
+      // Eat fruit
+      if (x === fruitX && y === fruitY) {
+        score += 10;
+        fruitX = Math.floor(Math.random() * (WIDTH - 2)) + 1;
+        fruitY = Math.floor(Math.random() * (HEIGHT - 2)) + 1;
+        tailLength++;
+        tail.push({ x: 0, y: 0 });
+      }
+
+      draw();
+    }
+
+    function loop() {
+      if (!gameOver) {
+        update();
+        setTimeout(loop, 80); // Delay similar to Sleep(80)
+      } else {
+        draw();
+        ctx.fillStyle = "white";
+        ctx.font = "30px Arial";
+        ctx.fillText("GAME OVER", canvas.width / 2 - 100, canvas.height / 2);
+        ctx.font = "20px Arial";
+        ctx.fillText("Final Score: " + score, canvas.width / 2 - 70, canvas.height / 2 + 30);
+      }
+    }
+
+    document.addEventListener("keydown", (e) => {
+      switch (e.key.toLowerCase()) {
+        case "a":
+        case "arrowleft":
+          if (dir !== "RIGHT") dir = "LEFT";
+          break;
+        case "d":
+        case "arrowright":
+          if (dir !== "LEFT") dir = "RIGHT";
+          break;
+        case "w":
+        case "arrowup":
+          if (dir !== "DOWN") dir = "UP";
+          break;
+        case "s":
+        case "arrowdown":
+          if (dir !== "UP") dir = "DOWN";
+          break;
+        case "x":
+          gameOver = true;
+          break;
+      }
+    });
+
+    draw();
+    loop();
+  </script>
+</body>
+</html>
